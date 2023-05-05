@@ -19,15 +19,6 @@ right_sensor = machine.ADC(28)
 
 
 robot = Robot(left=(8, 9), right=(10, 11),pwm=True)
-# robot.forward(speed=0.5)
-# utime.sleep(5)
-# robot.backward(speed=0.5)
-# utime.sleep(5)
-# robot.left(speed=0.5)
-# utime.sleep(5)
-# robot.right(speed=0.5)
-# utime.sleep(5)
-# robot.stop()
 
 while True:
     left_sensor_val = left_sensor.read_u16()
