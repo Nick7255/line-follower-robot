@@ -7,16 +7,6 @@ from picozero import Robot
 left_sensor = machine.ADC(26)
 middle_sensor = machine.ADC(27)
 right_sensor = machine.ADC(28)
-# 
-# button = machine.Pin(20, machine.Pin.IN, machine.Pin.PULL_UP)
-# button2 = machine.Pin(21, machine.Pin.IN, machine.Pin.PULL_UP)
-# 
-# # Motor Pins
-# left_motor1_pin = machine.PWM(machine.Pin(9))
-# left_motor2_pin = machine.PWM(machine.Pin(8))
-# right_motor1_pin = machine.PWM(machine.Pin(11))
-# right_motor2_pin = machine.PWM(machine.Pin(10))
-
 
 robot = Robot(left=(8, 9), right=(10, 11),pwm=True)
 
@@ -26,10 +16,6 @@ while True:
     middle_sensor_val = middle_sensor.read_u16()
     
     right_sensor_val = right_sensor.read_u16()
-    
-    print("left sensor",left_sensor_val)
-    print("middle sensor",middle_sensor_val)
-    print("right sensor",right_sensor_val)
     
     #go forward if only the middle sensor sees the line 
     if left_sensor_val > (13000) and middle_sensor_val < (13000) and right_sensor_val > (13000) :
