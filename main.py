@@ -1,47 +1,67 @@
+from machine import Pin, ADC, PWM
 import utime
-import machine
-from machine import Pin, PWM, ADC
-from picozero import Robot
 
-# Sensor Pins
-left_sensor = machine.ADC(26)
-middle_sensor = machine.ADC(27)
-right_sensor = machine.ADC(28)
+# Define pins for IR sensors
+sensor_left = ADC(Pin(26))
+sensor_middle = ADC(Pin(27))
+sensor_right = ADC(Pin(28))
 
-robot = Robot(left=(8, 9), right=(10, 11),pwm=True)
+# Define pins for motors
+motor_left_dir = Pin(8, Pin.OUT)
+motor_left_pwm = PWM(Pin(9))
+motor_right_dir = Pin(10, Pin.OUT)
+motor_right_pwm = PWM(Pin(11))
+
+# Define motor direction constants
+FORWARD = 1
+REVERSE = 0
+
+# Set initial PWM frequency
+motor_left_pwm.freq(1000)
+motor_right_pwm.freq(1000)
+
+# PID constants
+Kp = 1
+Ki = 0
+Kd = 0
+
+# PID variables
+integral = 0
+previous_error = 0
+
+def get_error():
+    # Get sensor readings
+    left = sensor_left.read_u16()
+    middle = sensor_middle.read_u16()
+    right = sensor_right.read_u16()
+
+    # Calculate error
+    if middle < 12000:    # Over the line
+        error = 0
+    elif left < 12000:   # Left of the line
+        error = -10
+    elif right < 12000:  # Right of the line
+        error = 10
+    else:               # No line detected
+        error = 0
+
+    return error
 
 while True:
-    left_sensor_val = left_sensor.read_u16()
-    
-    middle_sensor_val = middle_sensor.read_u16()
-    
-    right_sensor_val = right_sensor.read_u16()
-    
-    #go forward if only the middle sensor sees the line 
-    if left_sensor_val > (13000) and middle_sensor_val < (13000) and right_sensor_val > (13000) :
-        robot.forward(speed=0.3)
-        
-    #turn left if the left and middle sensor see the line
-    elif left_sensor_val < (13000) and middle_sensor_val < (13000) and right_sensor_val > (13000) :
-        robot.left(speed=0.3)
-        
-    #extreme case of sharp turn to the left
-    elif left_sensor_val < (13000) and middle_sensor_val > (13000) and right_sensor_val > (13000) :
-        robot.left(speed=0.3)
-    
-    #turn right if the right and middle sensor see the line
-    elif left_sensor_val > (13000) and middle_sensor_val < (13000) and right_sensor_val < (13000) :
-        robot.right(speed=0.3)
-        
-    #extreme case of sharp turn to the right
-    elif left_sensor_val > (13000) and middle_sensor_val > (13000) and right_sensor_val < (13000) :
-        robot.right(speed=0.3)
-        
-    #stop the robot if all three sensors see white at the same time
-    elif left_sensor_val > (13000) and middle_sensor_val > (13000) and right_sensor_val > (13000) :
-        robot.stop()
-        
-    #stop if all sensors see black at the same time
-    elif left_sensor_val < (13000) and middle_sensor_val < (13000) and right_sensor_val < (13000) :
-        robot.stop()
-    utime.sleep(0.1)
+    # Calculate PID
+    error = get_error()
+    integral += error
+    derivative = error - previous_error
+    turn = Kp*error + Ki*integral + Kd*derivative
+    previous_error = error
+
+    # Update motor speeds
+    motor_left_pwm.duty_u16(max(min(65025, 32512 + turn), 0))
+    motor_right_pwm.duty_u16(max(min(65025, 32512 - turn), 0))
+
+    # Motor direction control
+    motor_left_dir.value(FORWARD if turn >= 0 else REVERSE)
+    motor_right_dir.value(FORWARD if turn <= 0 else REVERSE)
+
+    # Short delay before next reading
+    utime.sleep(0.01)
