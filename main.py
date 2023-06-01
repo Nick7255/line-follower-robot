@@ -29,6 +29,10 @@ Kd = 0
 integral = 0
 previous_error = 0
 
+def stop():
+    motor_left_pwm.duty_u16(0)
+    motor_right_pwm.duty_u16(0)
+
 def get_error():
     # Get sensor readings
     left = sensor_left.read_u16()
@@ -48,20 +52,23 @@ def get_error():
     return error
 
 while True:
-    # Calculate PID
-    error = get_error()
-    integral += error
-    derivative = error - previous_error
-    turn = Kp*error + Ki*integral + Kd*derivative
-    previous_error = error
+    if(left and middle and right >30000) :
+        stop()
+    elif (left and middle and right <30000) :
+        stop()
+    else
+        # Calculate PID
+        error = get_error()
+        integral += error
+        derivative = error - previous_error
+        turn = Kp*error + Ki*integral + Kd*derivative
+        previous_error = error
 
-    # Update motor speeds
-    motor_left_pwm.duty_u16(max(min(65025, 32512 + turn), 0))
-    motor_right_pwm.duty_u16(max(min(65025, 32512 - turn), 0))
+        # Update motor speeds
+        motor_left_pwm.duty_u16(max(min(65025, 32512 + turn), 0))
+        motor_right_pwm.duty_u16(max(min(65025, 32512 - turn), 0))
 
-    # Motor direction control
-    motor_left_dir.value(FORWARD if turn >= 0 else REVERSE)
-    motor_right_dir.value(FORWARD if turn <= 0 else REVERSE)
+        # Motor direction control
+        motor_left_dir.value(FORWARD if turn >= 0 else REVERSE)
+        motor_right_dir.value(FORWARD if turn <= 0 else REVERSE)
 
-    # Short delay before next reading
-    utime.sleep(0.01)
