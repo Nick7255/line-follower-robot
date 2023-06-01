@@ -29,16 +29,13 @@ Kd = 0
 integral = 0
 previous_error = 0
 
+# stop motors
 def stop():
     motor_left_pwm.duty_u16(0)
     motor_right_pwm.duty_u16(0)
 
-def get_error():
-    # Get sensor readings
-    left = sensor_left.read_u16()
-    middle = sensor_middle.read_u16()
-    right = sensor_right.read_u16()
-
+def get_error(left,middle,right):
+   
     # Calculate error
     if middle < 12000:    # Over the line
         error = 0
@@ -52,13 +49,19 @@ def get_error():
     return error
 
 while True:
-    if(left and middle and right >30000) :
+    # Get sensor readings
+    left = sensor_left.read_u16()
+    middle = sensor_middle.read_u16()
+    right = sensor_right.read_u16()
+    
+    # check if all sensors see black or white at the same time
+    if(left >30000 and middle >30000 and right >30000) :
         stop()
-    elif (left and middle and right <30000) :
+    elif (left <30000 and middle <30000 and right <30000) :
         stop()
-    else
+    else:
         # Calculate PID
-        error = get_error()
+        error = get_error(left,middle,right)
         integral += error
         derivative = error - previous_error
         turn = Kp*error + Ki*integral + Kd*derivative
@@ -71,4 +74,5 @@ while True:
         # Motor direction control
         motor_left_dir.value(FORWARD if turn >= 0 else REVERSE)
         motor_right_dir.value(FORWARD if turn <= 0 else REVERSE)
+
 
