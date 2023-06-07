@@ -77,5 +77,3 @@ while True:
         # Motor direction control
         motor_left_dir.value(FORWARD if turn >= 0 else REVERSE)
         motor_right_dir.value(FORWARD if turn <= 0 else REVERSE)
-        
-    utime.sleep(0.2)
