@@ -58,10 +58,8 @@ while True:
     # Check if all sensors see black or white at the same time
     if (left > 30000) and (middle > 30000) and (right > 30000):
         stop()
-        print("should stop",left,middle,right)
     elif (left < 30000) and (middle < 30000) and (right < 30000):
         stop()
-        print("should stop",left,middle,right)
     else:
         # Calculate PID
         error = get_error(left, middle, right)
